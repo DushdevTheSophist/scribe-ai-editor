@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScribeAI - Smart Markdown Editor & Co-Writer</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Marked.js (Markdown parser) -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        
+        <!-- Header -->
+        <header class="app-header">
+            <div class="logo-area">
+                <div class="logo-icon">
+                    <i data-lucide="pen-tool"></i>
+                </div>
+                <h1>Scribe<span>AI</span></h1>
+            </div>
+            
+            <div class="document-title-container">
+                <input type="text" id="doc-title" value="Untitled Document" placeholder="Document Title..." class="doc-title-input">
+                <div class="save-status" id="save-status">
+                    <i data-lucide="check" class="status-icon success-icon"></i>
+                    <span id="save-status-text">All changes saved</span>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <button class="action-btn" id="theme-toggle" title="Toggle Theme">
+                    <i data-lucide="sun" class="sun-icon"></i>
+                    <i data-lucide="moon" class="moon-icon"></i>
+                </button>
+                <button class="action-btn" id="view-toggle" title="Toggle Layout View">
+                    <i data-lucide="columns"></i>
+                </button>
+                <div class="export-dropdown-container">
+                    <button class="action-btn primary-btn" id="export-btn">
+                        <i data-lucide="download"></i>
+                        <span>Export</span>
+                    </button>
+                    <div class="dropdown-menu" id="export-menu">
+                        <button class="dropdown-item" id="export-md">
+                            <i data-lucide="file-text"></i> Markdown (.md)
+                        </button>
+                        <button class="dropdown-item" id="export-html">
+                            <i data-lucide="file-code"></i> HTML (.html)
+                        </button>
+                        <button class="dropdown-item" id="export-txt">
+                            <i data-lucide="file"></i> Plain Text (.txt)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Main Dashboard Layout -->
+        <div class="dashboard-body">
+            
+            <!-- Left Sidebar (Documents Manager) -->
+            <aside class="sidebar" id="sidebar-left">
+                <div class="sidebar-header">
+                    <h3>My Documents</h3>
+                    <button class="icon-btn-circle" id="new-doc-btn" title="Create New Document">
+                        <i data-lucide="plus"></i>
+                    </button>
+                </div>
+                <div class="search-container">
+                    <i data-lucide="search" class="search-icon"></i>
+                    <input type="text" id="doc-search" placeholder="Search documents...">
+                </div>
+                <div class="doc-list" id="doc-list">
+                    <!-- Loaded dynamically via JS -->
+                    <div class="doc-list-empty">Loading documents...</div>
+                </div>
+                
+                <div class="sidebar-footer">
+                    <div class="settings-panel">
+                        <h4>Settings</h4>
+                        <div class="settings-row">
+                            <label for="font-size-slider">Font Size</label>
+                            <div class="slider-container">
+                                <input type="range" id="font-size-slider" min="12" max="22" value="16">
+                                <span id="font-size-val">16px</span>
+                            </div>
+                        </div>
+                        <div class="settings-row">
+                            <label for="auto-save-toggle">Auto-save</label>
+                            <label class="switch">
+                                <input type="checkbox" id="auto-save-toggle" checked>
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+            
+            <!-- Center Area (Split Workspace) -->
+            <main class="workspace" id="workspace">
+                <div class="pane editor-pane" id="editor-pane">
+                    <div class="pane-header">
+                        <div class="pane-title">
+                            <i data-lucide="edit-3"></i>
+                            <span>Markdown Editor</span>
+                        </div>
+                        <div class="editor-shortcuts">
+                            <button class="format-btn" data-format="bold" title="Bold (Ctrl+B)"><b>B</b></button>
+                            <button class="format-btn" data-format="italic" title="Italic (Ctrl+I)"><i>I</i></button>
+                            <button class="format-btn" data-format="heading" title="Heading (Ctrl+H)">H</button>
+                            <button class="format-btn" data-format="link" title="Link (Ctrl+K)"><i data-lucide="link"></i></button>
+                            <button class="format-btn" data-format="code" title="Code Block"><i data-lucide="code-2"></i></button>
+                            <button class="format-btn" data-format="quote" title="Quote"><i data-lucide="quote"></i></button>
+                        </div>
+                    </div>
+                    <div class="editor-container">
+                        <div class="line-numbers" id="line-numbers">1</div>
+                        <textarea id="markdown-textarea" placeholder="Type your markdown here... Use headers, bold, italics, tables, and lists. Underline or select text to execute AI actions on it." spellcheck="false"></textarea>
+                    </div>
+                </div>
+                
+                <div class="pane-divider" id="pane-divider"></div>
+                
+                <div class="pane preview-pane" id="preview-pane">
+                    <div class="pane-header">
+                        <div class="pane-title">
+                            <i data-lucide="eye"></i>
+                            <span>Formatted Preview</span>
+                        </div>
+                    </div>
+                    <div class="preview-container markdown-body" id="preview-content">
+                        <!-- Rendered markdown goes here -->
+                    </div>
+                </div>
+            </main>
+            
+            <!-- Right Sidebar (AI Assistant Panel) -->
+            <aside class="sidebar-ai" id="sidebar-right">
+                <div class="sidebar-header-ai">
+                    <div class="ai-title">
+                        <i data-lucide="sparkles" class="glowing-sparkle"></i>
+                        <h3>AI Writing Partner</h3>
+                    </div>
+                    <button class="icon-btn-circle" id="ai-info-btn" title="AI Capabilities Info">
+                        <i data-lucide="info"></i>
+                    </button>
+                </div>
+                
+                <div class="ai-toolbox">
+                    <h4>AI Co-Writing Actions</h4>
+                    <p class="toolbox-desc">Select text in the editor to apply actions, or click Autocomplete to continue writing from the end.</p>
+                    
+                    <div class="ai-grid">
+                        <button class="ai-action-btn" data-action="autocomplete">
+                            <i data-lucide="wand-2"></i>
+                            <span>Autocomplete</span>
+                        </button>
+                        <button class="ai-action-btn" data-action="summarize">
+                            <i data-lucide="shrink"></i>
+                            <span>Summarize</span>
+                        </button>
+                        <button class="ai-action-btn" data-action="simplify">
+                            <i data-lucide="feather"></i>
+                            <span>Simplify</span>
+                        </button>
+                        <button class="ai-action-btn" data-action="grammar">
+                            <i data-lucide="check-check"></i>
+                            <span>Fix Style</span>
+                        </button>
+                        <button class="ai-action-btn" data-action="expand">
+                            <i data-lucide="maximize-2"></i>
+                            <span>Expand Text</span>
+                        </button>
+                        <button class="ai-action-btn" data-action="outline">
+                            <i data-lucide="list-tree"></i>
+                            <span>Build Outline</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="ai-result-panel">
+                    <div class="ai-result-header">
+                        <span>Assistant Output</span>
+                        <div class="result-source" id="ai-source">Ready</div>
+                    </div>
+                    <div class="ai-result-body" id="ai-output-box">
+                        <span class="ai-placeholder">AI suggestions will appear here. Choose an action above or type text and select it to begin.</span>
+                    </div>
+                    <div class="ai-result-actions" id="ai-result-actions" style="display: none;">
+                        <button class="ai-card-btn" id="ai-copy-btn">
+                            <i data-lucide="copy"></i> Copy
+                        </button>
+                        <button class="ai-card-btn primary-ai-btn" id="ai-insert-btn">
+                            <i data-lucide="text-cursor-input"></i> Insert / Replace
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="ai-keywords-panel">
+                    <h4>Document Key Terms</h4>
+                    <div class="keywords-list" id="keywords-list">
+                        <!-- Loaded dynamically -->
+                        <span class="kw-placeholder">Write some text to extract key themes.</span>
+                    </div>
+                </div>
+            </aside>
+            
+        </div>
+        
+        <!-- Status Bar -->
+        <footer class="app-status-bar">
+            <div class="status-left">
+                <span class="status-item"><i data-lucide="type"></i> <span id="word-count">0</span> words</span>
+                <span class="status-item"><i data-lucide="align-left"></i> <span id="char-count">0</span> characters</span>
+                <span class="status-item"><i data-lucide="clock"></i> <span id="reading-time">0</span> min read</span>
+            </div>
+            <div class="status-center">
+                <span class="status-item text-accent" id="readability-badge">
+                    <i data-lucide="trending-up"></i> Readability: <span id="readability-val">N/A</span>
+                </span>
+            </div>
+            <div class="status-right">
+                <span class="status-item" id="connection-status">
+                    <span class="status-dot online"></span> API Server Connected
+                </span>
+            </div>
+        </footer>
+        
+    </div>
+    
+    <!-- Info Modal -->
+    <div class="modal-overlay" id="info-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Unlock Full AI Capabilities</h2>
+                <button class="close-btn" id="modal-close"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body">
+                <p>This editor features a local NLP engine for fast, server-side text analytics and summaries.</p>
+                <div class="gemini-promo-card">
+                    <div class="card-icon"><i data-lucide="sparkles"></i></div>
+                    <div class="card-text">
+                        <h3>Connect Google Gemini API</h3>
+                        <p>To use advanced AI completions, style updates, outlines, and rewriting, set your API key as an environment variable before launching the server:</p>
+                        <code>$env:GEMINI_API_KEY="your-api-key-here"</code>
+                        <p class="small-note">The server will automatically detect the key and switch from local fallback algorithms to the state-of-the-art Gemini 1.5 Flash model.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="/js/app.js"></script>
+    <script>
+        // Initialize lucide icons on load
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+        });
+    </script>
+</body>
+</html>
